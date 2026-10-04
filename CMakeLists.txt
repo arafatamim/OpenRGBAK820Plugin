@@ -27,10 +27,17 @@ add_library(OpenRGBAK820Plugin SHARED AK820Plugin.h AK820Plugin.json AK820Plugin
 target_include_directories(OpenRGBAK820Plugin PRIVATE
     ${ORGB}
     ${ORGB}/RGBController
-    ${ORGB}/dependencies/json
-    ${ORGB}/dependencies/hidapi-hotplug-win/include)
+    ${ORGB}/dependencies/json)
 
-# Link against the hidapi-hotplug.dll OpenRGB already ships and has loaded.
-target_link_libraries(OpenRGBAK820Plugin PRIVATE
-    Qt6::Core Qt6::Gui Qt6::Widgets
-    ${ORGB}/dependencies/hidapi-hotplug-win/x64/hidapi-hotplug.lib)
+target_link_libraries(OpenRGBAK820Plugin PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+
+if(WIN32)
+    # Link against the hidapi-hotplug.dll OpenRGB already ships and has loaded.
+    target_include_directories(OpenRGBAK820Plugin PRIVATE ${ORGB}/dependencies/hidapi-hotplug-win/include)
+    target_link_libraries(OpenRGBAK820Plugin PRIVATE ${ORGB}/dependencies/hidapi-hotplug-win/x64/hidapi-hotplug.lib)
+else()
+    # Same hidraw backend OpenRGB uses on Linux.
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(HIDAPI REQUIRED IMPORTED_TARGET hidapi-hidraw)
+    target_link_libraries(OpenRGBAK820Plugin PRIVATE PkgConfig::HIDAPI)
+endif()

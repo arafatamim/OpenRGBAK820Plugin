@@ -1,0 +1,4 @@
+# Lets the logged-in user open the AK820 Max Plus without root.
+# sudo cp 60-openrgb-ak820.rules /etc/udev/rules.d/ && sudo udevadm control --reload && sudo udevadm trigger
+SUBSYSTEMS=="usb|hidraw", ATTRS{idVendor}=="1a2c", ATTRS{idProduct}=="8fff", TAG+="uaccess"
+SUBSYSTEMS=="usb|hidraw", ATTRS{idVendor}=="1a2c", ATTRS{idProduct}=="a036", TAG+="uaccess"
