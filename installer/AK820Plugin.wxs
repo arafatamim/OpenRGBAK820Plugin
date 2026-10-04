@@ -1,0 +1,42 @@
+<!--
+    Per-user MSI: drops the DLL into %APPDATA%\OpenRGB\plugins by default, no admin needed.
+    The folder can be changed in the wizard (e.g. a custom config dir's plugins folder).
+    Build commands are in the README (WiX 5 + WixToolset.UI.wixext).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+    <Package Name="OpenRGB AK820 Max Plus Plugin"
+             Manufacturer="Tamim Arafat"
+             Version="$(Version)"
+             UpgradeCode="AE60D685-509D-4EC1-8F46-8B7485A578F7"
+             Scope="perUser">
+        <MajorUpgrade AllowSameVersionUpgrades="yes"
+                      DowngradeErrorMessage="A newer version of the AK820 plugin is already installed." />
+        <MediaTemplate EmbedCab="yes" />
+
+        <!-- Reuse the folder picked last time, so upgrades land in the same place -->
+        <Property Id="PLUGINSDIR">
+            <RegistrySearch Id="PreviousPluginsDir" Root="HKCU" Key="Software\OpenRGBAK820Plugin" Name="InstallDir" Type="raw" />
+        </Property>
+
+        <!-- License, folder picker, Install, Finish -->
+        <ui:WixUI Id="WixUI_InstallDir" />
+        <Property Id="WIXUI_INSTALLDIR" Value="PLUGINSDIR" />
+        <WixVariable Id="WixUILicenseRtf" Value="installer/License.rtf" />
+
+        <StandardDirectory Id="AppDataFolder">
+            <Directory Id="OpenRGBDir" Name="OpenRGB">
+                <Directory Id="PLUGINSDIR" Name="plugins">
+                    <!-- Per-user files need an HKCU key path and explicit folder removal (ICE38/ICE64). -->
+                    <Component Id="PluginDll" Guid="F536FB14-5DAE-4868-BC31-1C86FE5C53E2">
+                        <!-- The DLL has no version resource; without DefaultVersion a hand-copied older DLL would be kept. -->
+                        <File Source="build/Release/OpenRGBAK820Plugin.dll" DefaultVersion="$(Version)" />
+                        <RegistryValue Root="HKCU" Key="Software\OpenRGBAK820Plugin" Name="InstallDir" Type="string" Value="[PLUGINSDIR]" KeyPath="yes" />
+                        <RemoveFolder Id="RemovePluginsDir" Directory="PLUGINSDIR" On="uninstall" />
+                        <RemoveFolder Id="RemoveOpenRGBDir" Directory="OpenRGBDir" On="uninstall" />
+                    </Component>
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+    </Package>
+</Wix>
